@@ -1,0 +1,52 @@
+{
+  "name": "@xessential/react",
+  "version": "0.0.1-beta.1",
+  "description": "",
+  "main": "./dist/esm/index.js",
+  "type": "module",
+  "types": "./dist/types/index.d.ts",
+  "scripts": {
+    "build": "yarn tsc --project tsconfig.esm.json",
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "lint": "yarn eslint .",
+    "lint:fix": "yarn eslint src/ --fix"
+  },
+  "exports": {
+    "import": "./dist/esm/index.js",
+    "default": "./dist/esm/index.js"
+  },
+  "files": [
+    "dist",
+    "!**/*.spec.*",
+    "README.md",
+    "package.json"
+  ],
+  "author": "sbauch",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@xessential/signer": "^0.0.1-beta.1",
+    "@ethersproject/abstract-provider": "^5.7.0",
+    "@types/node": "^18.11.18",
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@typescript-eslint/eslint-plugin": "^5.21.0",
+    "@typescript-eslint/parser": "^5.21.0",
+    "@wagmi/core": "^0.9.0",
+    "eslint": "^8.14.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "ethers": "^5.7.2",
+    "prettier": "^2.6.2",
+    "typescript": "^4.5.4",
+    "wagmi": "^0.10.x"
+  },
+  "peerDependencies": {
+    "@wagmi/core": "^0.9.0",
+    "ethers": ">=5.5.1",
+    "react": ">=17",
+    "react-dom": ">=17",
+    "wagmi": "^0.10.0"
+  }
+}
