@@ -1,36 +1,31 @@
-import { IForwardRequest } from '@xessential/signer';
-import { Interface } from '@ethersproject/abi';
-import { TransactionResponse } from '@ethersproject/providers';
 import { Abi } from 'abitype';
-import { Contract, Signer } from 'ethers';
+import { Signer } from 'ethers';
 import * as React from 'react';
-import { UseContractWriteConfig, WriteContractMode } from 'wagmi';
+import { UseContractWriteConfig } from 'wagmi';
 
 import { useDelegatedAccount } from './useDelegatedAccount.js';
+import {
+  SendTransactionResult,
+  WriteContractMode,
+  WriteContractPreparedArgs,
+} from '@wagmi/core';
 
 export function useContractWrite<
-  TMode extends WriteContractMode,
-  TAbi extends Abi | readonly unknown[],
-  TFunctionName extends string,
->({
-  address,
-  args,
-  abi,
-  functionName,
-  metaRequest,
-  overrides,
-  proof,
-  onError,
-  onSuccess,
-  signer,
-}: UseContractWriteConfig<TMode, TAbi, TFunctionName> & {
-  signer: Signer;
-  metaRequest?: IForwardRequest.ERC721ForwardRequestStruct;
-  proof?: `0x${string}`;
-}) {
-  const [data, setData] = React.useState<TransactionResponse>();
-  const { address: authorizer } = useDelegatedAccount();
+  TMode extends WriteContractMode = WriteContractMode,
+  TAbi extends Abi | readonly {}[] = Abi,
+  TFunctionName extends string = string,
+>(
+  config: UseContractWriteConfig<TMode, TAbi, TFunctionName> & {
+    signer: Signer;
+    proof?: `0x${string}`;
+    onSuccess?: (data: SendTransactionResult) => void;
+  },
+) {
+  const [data, setData] = React.useState<SendTransactionResult>();
   const [isLoading, setLoading] = React.useState(false);
+
+  const { address, abi, functionName, chainId, mode, signer } = config;
+  const { request } = config as WriteContractPreparedArgs<TAbi, TFunctionName>;
 
   const defaultValues = {
     error: false,
@@ -40,71 +35,25 @@ export function useContractWrite<
     isSuccess: false,
   };
 
-  const write = React.useCallback(() => {
-    const implementationContract = new Contract(
-      address!,
-      new Interface(abi! as any),
-      signer,
-    );
-
-    const {
-      nonce: _nonce,
-      authorizer,
-      nftChainId,
-      nftContract,
-      nftTokenId,
-    } = metaRequest || {};
-
-    const _overrides = overrides
-      ? [overrides]
-      : [
-          {
-            customData: {
-              authorizer,
-              ...(nftContract ? { nftContract } : {}),
-              ...(nftTokenId ? { nftTokenId } : {}),
-              ...(nftChainId ? { nftChainId } : {}),
-              ...(_nonce ? { nonce: _nonce } : {}),
-              ...(proof ? { proof } : {}),
-            },
-          },
-        ];
-
-    const flatArgs = [...(args ? (args as any) : [null]), ..._overrides];
-
+  const write = React.useCallback(async () => {
+    if (!signer) return;
+    
     setLoading(true);
-
-    return implementationContract[functionName as string]
-      .apply(null, flatArgs)
-      .then((resp: TransactionResponse) => {
-        setData(resp);
-        onSuccess?.(resp as any, {} as any, null);
-        setLoading(false);
+    signer
+      .sendTransaction(request)
+      .then((response) => {
+        setData(response as SendTransactionResult);
+        config?.onSuccess?.(response as SendTransactionResult, {} as any, null);
       })
       .catch((e: Error) => {
-        onError?.(e, {} as any, null);
+        config?.onError?.(e, {} as any, null);
+      })
+      .finally(() => {
         setLoading(false);
       });
-  }, [
-    address,
-    abi,
-    signer,
-    args,
-    overrides,
-    authorizer,
-    functionName,
-    onSuccess,
-    onError,
-  ]);
+  }, [address, chainId, abi, functionName, mode, request, signer]);
 
   return {
-    // error,
-    // isError,
-    // isIdle,
-    // isSuccess,
-    // reset,
-    // status,
-    // variables,
     ...defaultValues,
     isLoading,
     data,

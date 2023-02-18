@@ -285,21 +285,6 @@ const abi = [
             type: 'address',
           },
           {
-            internalType: 'address',
-            name: 'nftContract',
-            type: 'address',
-          },
-          {
-            internalType: 'uint256',
-            name: 'nftTokenId',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
-            name: 'nftChainId',
-            type: 'uint256',
-          },
-          {
             internalType: 'uint256',
             name: 'targetChainId',
             type: 'uint256',
@@ -325,7 +310,7 @@ const abi = [
             type: 'bytes',
           },
         ],
-        internalType: 'struct IForwardRequest.ERC721ForwardRequest',
+        internalType: 'struct IForwardRequest.ForwardRequest',
         name: 'req',
         type: 'tuple',
       },
@@ -817,21 +802,6 @@ const abi = [
             type: 'address',
           },
           {
-            internalType: 'address',
-            name: 'nftContract',
-            type: 'address',
-          },
-          {
-            internalType: 'uint256',
-            name: 'nftTokenId',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
-            name: 'nftChainId',
-            type: 'uint256',
-          },
-          {
             internalType: 'uint256',
             name: 'targetChainId',
             type: 'uint256',
@@ -857,7 +827,7 @@ const abi = [
             type: 'bytes',
           },
         ],
-        internalType: 'struct IForwardRequest.ERC721ForwardRequest',
+        internalType: 'struct IForwardRequest.ForwardRequest',
         name: 'req',
         type: 'tuple',
       },

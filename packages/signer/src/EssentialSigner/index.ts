@@ -182,34 +182,26 @@ export class EssentialSigner extends Signer implements ExternallyOwnedAccount {
 
   // Populates all fields in a transaction, signs it and sends it to the network
   async sendTransaction(
-    transaction: TransactionRequest & { customData: EssentialOverrides },
+    transaction: TransactionRequest & EssentialOverrides,
   ): Promise<TransactionResponse | any> {
     const _signer = this.privateKey || this.provider;
-    if (!_signer) return;
+    console.warn(transaction)
 
-    if (transaction.customData?.proof) {
+    if (!_signer) return;
+    if (transaction?.proof) {
       return this.connectedSigner.sendTransaction({
         to: this.forwarder.address,
-        data: transaction.customData?.proof,
-        gasLimit: 1e6,
+        data: transaction.proof,
       });
     }
 
     const result = await signMetaTxRequest(
       _signer,
-      {
-        to: transaction.to,
-        from: transaction.from,
-        ...transaction.customData,
-        targetChainId: this.chainId,
-        data: transaction.data,
-        nonce: transaction.nonce,
-      } as ForwardRequestInput,
+      transaction as ForwardRequestInput,
       this.forwarder,
       this.domainName,
     );
 
-    // SUBMITTING META TX EVENT
     this.onSubmit && this.onSubmit();
 
     const txResult = await fetch(this.relayerUri, {

@@ -12,6 +12,12 @@ enum DELEGATION_TYPES {
   TOKEN,
 }
 
+type Delegation = {
+  type: DELEGATION_TYPES;
+  contract_?:  `0x${string}`;
+  tokenId: BigNumberish;
+}
+
 type DelegatedAccountResult = {
   /* 
     The primary address for user context. If the user is connected to a delegated wallet,
@@ -112,11 +118,11 @@ export function useDelegatedAccount(
     functionName: 'getDelegationsByDelegate',
     args: [signerAddress || constants.AddressZero],
     enabled: account.isConnected,
-  });
+  }) as { data: Delegation[]};
 
   const validDelegations = useMemo(() => {
     if (type === DELEGATION_TYPES.ALL) return delegations;
-    delegations!.reduce((vd: any[], delegation) => {
+    return delegations.reduce((vd: any[], delegation) => {
       if (type === DELEGATION_TYPES.TOKEN && tokenId !== delegation.tokenId)
         return vd;
 

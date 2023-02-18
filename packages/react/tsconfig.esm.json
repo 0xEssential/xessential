@@ -4,7 +4,7 @@
       "target": "es6",
       "module": "ES2020",
       "outDir": "dist/esm",
-      "declarationDir": "dist/types",
+      "declarationDir": "dist/esm",
       "declaration": true
   }
 }

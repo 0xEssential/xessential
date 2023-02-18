@@ -12,8 +12,5 @@
     "declaration": true,
     "declarationDir": "dist/types"
   },
-  "files": ["index.js"],
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.test.js"]
 }
 
