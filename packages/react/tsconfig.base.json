@@ -1,16 +1,24 @@
 {
   "compilerOptions": {
-      "allowSyntheticDefaultImports": true,
-      "esModuleInterop": true,
-      "noImplicitAny": true,
-      "removeComments": true,
-      "preserveConstEnums": true,
-      "sourceMap": true,
-      "allowJs": true,
-      "moduleResolution": "node",
-      "declaration": true,
-      "resolveJsonModule": true
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "Node",
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "noUncheckedIndexedAccess": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "declaration": true,
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/types.d.ts"],
   "exclude": ["node_modules", "**/*.test.js", "src/typechain/**/*"]
 }

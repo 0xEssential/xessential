@@ -1,6 +1,6 @@
 {
   "name": "@xessential/signer",
-  "version": "0.0.1-beta.5",
+  "version": "0.0.1-beta.6",
   "description": "",
   "main": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",

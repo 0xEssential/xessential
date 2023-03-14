@@ -2,11 +2,13 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import {Counter} from "../../contracts/test/Counter.sol";
+import {Counter} from "contracts/test/Counter.sol";
 import {SigUtils} from "./utils/SigUtils.sol";
 import {EssentialForwarder} from "../../contracts/fwd/EssentialForwarder.sol";
-import {IForwardRequest} from "../../contracts/fwd/IForwardRequest.sol";
+import {IForwardRequest} from "contracts/fwd/IForwardRequest.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
+import "forge-std/console.sol";
 
 contract EssentialForwarderTest is Test {
     Counter internal counter;
@@ -23,7 +25,7 @@ contract EssentialForwarderTest is Test {
 
     function metaTx(bytes memory func) internal {
         bytes memory encodedFunc = abi.encode(keccak256(func));
-        
+
         IForwardRequest.ERC721ForwardRequest memory req = sigUtils.buildRequest(encodedFunc, eoa, eoa);
 
         bytes memory sig = sigUtils.signRequest(req);
@@ -39,23 +41,24 @@ contract EssentialForwarderTest is Test {
         ownershipSignerPrivateKey = 0xB12CE;
         ownershipSigner = vm.addr(ownershipSignerPrivateKey);
 
-        forwarder = new EssentialForwarder();
+        forwarder = new EssentialForwarder(0x2cE6BD653220436eB8f35E146B0Dd1a6013E97a7);
         counter = new Counter(address(forwarder));
         sigUtils = new SigUtils(
             forwarder._domainSeparatorV4(),
-            forwarder, 
+            forwarder,
             address(counter),
             ownershipSignerPrivateKey,
             eoaPrivateKey
         );
 
-        vm.prank(0x2cE6BD653220436eB8f35E146B0Dd1a6013E97a7);
+        vm.startPrank(0x2cE6BD653220436eB8f35E146B0Dd1a6013E97a7);
         forwarder.setOwnershipSigner(ownershipSigner);
     }
 
     function getInitHash() public returns (bytes32) {
         bytes memory bytecode = type(EssentialForwarder).creationCode;
-        return keccak256(abi.encodePacked(bytecode));
+        bytes memory initCode = abi.encodePacked(bytecode, abi.encode(0x2cE6BD653220436eB8f35E146B0Dd1a6013E97a7));
+        return keccak256(abi.encodePacked(initCode));
     }
 
     function testInitHash() public {
@@ -104,7 +107,7 @@ contract EssentialForwarderTest is Test {
     // we can unit test EssentialForwarder#executeWithProof by mocking out the
     // signature that our API would normally provide.
     function testForwardedIncrement() public {
-        metaTx('increment()');
+        metaTx("increment()");
         uint256 count = counter.count(eoa);
         assertEq(count, 1);
     }

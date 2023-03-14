@@ -185,7 +185,6 @@ export class EssentialSigner extends Signer implements ExternallyOwnedAccount {
     transaction: TransactionRequest & EssentialOverrides,
   ): Promise<TransactionResponse | any> {
     const _signer = this.privateKey || this.provider;
-    console.warn(transaction)
 
     if (!_signer) return;
     if (transaction?.proof) {
@@ -215,7 +214,13 @@ export class EssentialSigner extends Signer implements ExternallyOwnedAccount {
       }),
       headers: { 'Content-Type': 'application/json' },
     })
-      .then((resp) => resp.json())
+      .then((resp) => {
+        if (resp.status === 500) {
+          throw new Error('Relayer API Error');
+        } else {
+          return resp.json();
+        }
+      })
       .then(({ result, status }) => {
         if (status === 'success') {
           return JSON.parse(result);

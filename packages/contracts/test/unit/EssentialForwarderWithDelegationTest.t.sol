@@ -46,7 +46,7 @@ contract EssentialForwarderWithDelegationTest is Test {
         ownershipSignerPrivateKey = 0xB12CE;
         ownershipSigner = vm.addr(ownershipSignerPrivateKey);
 
-        forwarder = new EssentialForwarder();
+        forwarder = new EssentialForwarder(address(this));
         counter = new Counter(address(forwarder));
         sigUtils = new SigUtils(
             forwarder._domainSeparatorV4(),
@@ -56,7 +56,6 @@ contract EssentialForwarderWithDelegationTest is Test {
             eoaPrivateKey
         );
 
-        vm.prank(0x2cE6BD653220436eB8f35E146B0Dd1a6013E97a7);
         forwarder.setOwnershipSigner(ownershipSigner);
     }
 

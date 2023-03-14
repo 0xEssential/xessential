@@ -26,6 +26,7 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
     error Unauthorized();
     error InvalidSignature();
     error InvalidOwnership();
+    error InternalTransactionFailure();
     error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData);
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -44,10 +45,9 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
 
     string[] public urls;
 
-    constructor() EssentialEIP712("EssentialForwarder", "0.0.1") {
-        _setupRole(DEFAULT_ADMIN_ROLE, 0x2cE6BD653220436eB8f35E146B0Dd1a6013E97a7);
-        _setupRole(ADMIN_ROLE, 0x2cE6BD653220436eB8f35E146B0Dd1a6013E97a7);
-        _setOwnershipSigner(0x2cE6BD653220436eB8f35E146B0Dd1a6013E97a7);
+    constructor(address initialOwner) EssentialEIP712("EssentialForwarder", "0.0.1") {
+        _setupRole(DEFAULT_ADMIN_ROLE, initialOwner);
+        _setupRole(ADMIN_ROLE, initialOwner);
     }
 
     /// @notice Set OffchainLookup urls
@@ -132,14 +132,13 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
     function executeWithProof(bytes calldata response, bytes calldata extraData)
         external
         payable
-        returns (bool, bytes memory)
+        returns (bytes memory)
     {
         (uint256 timestamp, IForwardRequest.ERC721ForwardRequest memory req, bytes memory signature) = abi.decode(
             extraData,
             (uint256, IForwardRequest.ERC721ForwardRequest, bytes)
         );
 
-        if (!verifyAuthorization(req.authorizer, req.from)) revert Unauthorized();
         if (!verifyRequest(req, signature)) revert InvalidSignature();
         if (!verifyOwnershipProof(req, response, timestamp)) revert InvalidOwnership();
 
@@ -151,7 +150,7 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
     function executeWithProofNative(bytes calldata response, bytes calldata extraData)
         external
         payable
-        returns (bool, bytes memory)
+        returns (bytes memory)
     {
         (uint256 timestamp, IForwardRequest.ERC721ForwardRequest memory req) = abi.decode(
             extraData,
@@ -159,7 +158,6 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
         );
 
         if (!verifyOwnershipProof(req, response, timestamp)) revert InvalidOwnership();
-        if (!verifyAuthorization(req.authorizer, msg.sender)) revert Unauthorized();
 
         ++_nonces[msg.sender];
 
@@ -167,7 +165,7 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
         return _executeWithProof(req);        
     }
 
-    function _executeWithProof(IForwardRequest.ERC721ForwardRequest memory req) internal returns (bool, bytes memory) {
+    function _executeWithProof(IForwardRequest.ERC721ForwardRequest memory req) internal returns (bytes memory) {
 
         (bool success, bytes memory returndata) = req.to.call{gas: req.gas, value: 0}(
             // Implementation contracts may use EssentialERC2771Context::_msgNFT()
@@ -178,8 +176,9 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
         // Validate that the relayer has sent enough gas for the call.
         // See https://ronan.eth.link/blog/ethereum-gas-dangers/
         assert(gasleft() > req.gas / 63);
-
-        return (success, returndata);
+        if(!success) revert InternalTransactionFailure();
+        
+        return returndata;
     }
 
 
@@ -197,10 +196,9 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
     function execute(IForwardRequest.ForwardRequest calldata req, bytes calldata signature)
         public
         payable
-        returns (bool, bytes memory)
+        returns (bytes memory)
     {
         if (!verifyUnauthenticatedRequest(req, signature)) revert InvalidSignature();
-        if (!verifyAuthorization(req.authorizer, req.from)) revert Unauthorized();
 
         _nonces[req.from] = req.nonce + 1;
 
@@ -211,8 +209,9 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
         // Validate that the relayer has sent enough gas for the call.
         // See https://ronan.eth.link/blog/ethereum-gas-dangers/
         assert(gasleft() > req.gas / 63);
-
-        return (success, returndata);
+        if(!success) revert InternalTransactionFailure();
+        
+        return returndata;
     }
 
     function verifyRequest(IForwardRequest.ERC721ForwardRequest memory req, bytes memory signature)
@@ -258,11 +257,5 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
             )
         ).recover(signature);
         return _nonces[req.from] == req.nonce && signer == req.from && req.targetChainId == block.chainid;
-    }
-
-
-    function verifyAuthorization(address vault, address delegate) internal view returns (bool) {
-        if (vault == delegate) return true;
-        return DelegationRegistry.checkDelegateForAll(delegate, vault);
     }
 }

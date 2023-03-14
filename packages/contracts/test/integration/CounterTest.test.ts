@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 import {expect} from 'chai';
 import {constants, Contract} from 'ethers';
 import {ethers} from 'hardhat';
@@ -29,8 +28,10 @@ const submitMetaTx = async (
 };
 
 const deployContracts = async (delegationSource: string) => {
+  const signers = await ethers.getSigners();
+
   const Forwarder = await ethers.getContractFactory('EssentialForwarder');
-  const forwarder = await Forwarder.deploy();
+  const forwarder = await Forwarder.deploy(signers[0].address);
   await forwarder.deployed();
 
   const Registry = await ethers.getContractFactory(delegationSource);
@@ -46,8 +47,6 @@ const deployContracts = async (delegationSource: string) => {
   const Counter = await ethers.getContractFactory('Counter');
   const counter = await Counter.deploy(forwarder.address);
   await counter.deployed();
-
-  const signers = await ethers.getSigners();
 
   const users = (await setupUsers(
     signers.map((signer) => signer.address),

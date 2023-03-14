@@ -7,30 +7,35 @@ import {
   Signer,
 } from '@wagmi/core';
 import { Abi } from 'abitype';
-import { constants, Contract, utils } from 'ethers';
+import { constants, Contract, providers, utils, Wallet } from 'ethers';
 import * as React from 'react';
 import { UsePrepareContractWriteConfig, useSigner } from 'wagmi';
 
 import { EssentialContext } from '../components/EssentialProvider.js';
 import { useDelegatedAccount } from './useDelegatedAccount.js';
+import { EssentialWalletContext } from '../components/EssentialWalletContext.js';
 
 type TAbi = Abi | readonly {}[];
 
-export type EssentialContractWriteConfig<  
-> = UsePrepareContractWriteConfig<TAbi, string, number, Signer> &
-PrepareWriteContractConfig & {
-  onSubmit?: () => void;
-  onSuccess?: (data: SendTransactionResult) => void;
-  txMode?: 'meta' | 'std';
-  address: `0x${string}` | string
-};
+export type EssentialContractWriteConfig<> = UsePrepareContractWriteConfig<
+  TAbi,
+  string,
+  number,
+  Signer
+> &
+  PrepareWriteContractConfig & {
+    onSubmit?: () => void;
+    onSuccess?: (data: SendTransactionResult) => void;
+    txMode?: 'meta' | 'std';
+    address: `0x${string}` | string;
+  };
 
-export type EssentialPrepareWriteContractResult = PrepareWriteContractResult<TAbi> & {
-  onSubmit?: () => void;
-  onSuccess?: (data: SendTransactionResult) => void;
-  signer: EssentialSigner;
-}
-
+export type EssentialPrepareWriteContractResult =
+  PrepareWriteContractResult<TAbi> & {
+    onSubmit?: () => void;
+    onSuccess?: (data: SendTransactionResult) => void;
+    signer: EssentialSigner;
+  };
 
 export function usePrepareContractWrite({
   address,
@@ -46,7 +51,7 @@ export function usePrepareContractWrite({
   onSubmit,
   onSuccess,
   txMode,
-}: EssentialContractWriteConfig ) {
+}: EssentialContractWriteConfig) {
   const {
     address: authorizer,
     signerAddress,
@@ -58,9 +63,22 @@ export function usePrepareContractWrite({
   const { relayerUri, rpcUrl, forwarderAddress, domainName } =
     React.useContext(EssentialContext);
 
+  const { wallet } = React.useContext(EssentialWalletContext);
+  const walletAddress = wallet?.getChecksumAddressString();
+
   const globalEntrySigner = React.useMemo(() => {
-    if (!signer || !signerAddress) return;
-    return new EssentialSigner(signerAddress, signer, {
+    if (!signerAddress || !signer) return;
+    let signerArgs: [string, Signer | Wallet] = [signerAddress, signer];
+
+    if (txMode === 'meta' && wallet && walletAddress) {
+      const _wallet = new Wallet(
+        wallet.getPrivateKey(),
+        new providers.JsonRpcProvider(rpcUrl),
+      );
+      signerArgs = [walletAddress, _wallet as unknown as Wallet];
+    }
+
+    return new EssentialSigner(...signerArgs, {
       domainName,
       forwarderAddress,
       relayerUri,
@@ -68,7 +86,7 @@ export function usePrepareContractWrite({
       rpcUrl,
       onSubmit,
     });
-  }, [signer, signerAddress, onSubmit]);
+  }, [signer, signerAddress, onSubmit, walletAddress]);
 
   // if standard tx, we need to call the preflight
   // if meta-tx, fetching the nonce now would be beneficial
@@ -76,15 +94,15 @@ export function usePrepareContractWrite({
     if (enabled === false) return;
     if (!globalEntrySigner || !signerAddress) return;
     if (!authorizer) return;
-    
-    const prepare = async () => {  
+
+    const prepare = async () => {
       setRequest(undefined);
       const nonce = (await globalEntrySigner?.fetchNonce())?.toNumber();
 
       const _overrides = {
-        ...overrides?.customData,
-        ...(nonce ? { nonce } : {}),
         authorizer: (vaultAddress || signerAddress) as string,
+        ...(nonce ? { nonce } : {}),
+        ...overrides?.customData,
       };
 
       const implementationContract = new Contract(
@@ -112,19 +130,17 @@ export function usePrepareContractWrite({
         };
 
         const proof = await globalEntrySigner?.preflightNative(req);
-        setRequest({...req, proof})
-
+        setRequest({ ...req, proof, to: forwarderAddress });
       } else {
         const req = await globalEntrySigner?.prepareTransaction({
           to: address,
-          from: signerAddress,
+          from: walletAddress || signerAddress,
           data: implementationContract.interface.encodeFunctionData(
             functionName,
             args as unknown[],
           ),
           customData: _overrides,
         });
-
         setRequest(req);
       }
     };
@@ -138,6 +154,7 @@ export function usePrepareContractWrite({
     signerAddress,
     scopeKey,
     enabled,
+    overrides,
   ]);
 
   return {
@@ -149,11 +166,11 @@ export function usePrepareContractWrite({
       mode: 'prepared',
       request: request,
       signer: globalEntrySigner,
-      // status: '', 
+      // status: '',
       onError,
       onSettled,
       onSuccess,
       onSubmit,
-    } as EssentialPrepareWriteContractResult
+    } as EssentialPrepareWriteContractResult,
   };
 }
