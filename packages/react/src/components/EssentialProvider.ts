@@ -32,20 +32,25 @@ const EssentialProvider = ({
   config: EssentialReactConfig;
   children: ReactNode;
 }): JSX.Element => {
-  const { burnerApiKey, burnerApiUrl } = config;
+  const { burnerApiKey, burnerApiUrl } = { ...defaultValue, ...config };
 
-  const _children = burnerApiKey && burnerApiUrl ? React.createElement(
-    EssentialWalletContextProvider,
-    { apiKey: burnerApiKey, baseUrl: burnerApiUrl },
-    children,
-  ) : children;
+  const _children = (__children: ReactNode) => {
+    if (burnerApiKey)
+      return React.createElement(
+        EssentialWalletContextProvider,
+        { apiKey: burnerApiKey, baseUrl: burnerApiUrl },
+        __children,
+      );
+
+    return __children;
+  };
 
   return React.createElement(
     EssentialContext.Provider,
     {
       value: { ...defaultValue, ...config },
     },
-    _children,
+    _children(children),
   );
 };
 

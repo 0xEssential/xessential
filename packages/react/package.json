@@ -9,7 +9,8 @@
     "build": "yarn tsc --project tsconfig.esm.json",
     "test": "echo \"Error: no test specified\" && exit 0",
     "lint": "yarn eslint .",
-    "lint:fix": "yarn eslint src/ --fix"
+    "lint:fix": "yarn eslint src/ --fix",
+    "link-out": "yarn build && yarn link && cd node_modules/react && yarn link && cd ../react-dom && yarn link && cd ../wagmi && yarn link"
   },
   "exports": {
     "import": "./dist/esm/index.js",
