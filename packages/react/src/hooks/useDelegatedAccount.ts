@@ -75,6 +75,9 @@ type DelegatedAccountResult = {
   /** Boolean for whether connected address is delegate of a vaultAddress */
   isDelegated: boolean;
 
+  /** Boolean for whether allAddresses is completely loaded for signerAddress */
+  loadingDelegates: boolean;
+
   /** Connected address used for transaction signing.  */
   signerAddress?: `0x${string}`;
 
@@ -117,6 +120,7 @@ export function useDelegatedAccount(
   const [allDelegations, setAllDelegations] = useState<Delegation[]>([]);
   const [vaultAddress, setVaultAddress] = useState<`0x${string}`>();
   const [updateBlock, setUpdateBlock] = useState(0);
+  const [loadingDelegates, setLoadingDelegates] = useState(true);
 
   const delegateAddress = useMemo(
     () => delegate || signerAddress,
@@ -255,6 +259,8 @@ export function useDelegatedAccount(
           ...branchDelegation,
         });
       });
+    } else {
+      setLoadingDelegates(false);
     }
   };
 
@@ -418,6 +424,7 @@ export function useDelegatedAccount(
     delegatedAddresses: delegatedAddresses as `0x${string}`[],
     isBurner,
     isDelegated,
+    loadingDelegates,
     signerAddress,
     setVaultAddress,
     vaultAddress,
