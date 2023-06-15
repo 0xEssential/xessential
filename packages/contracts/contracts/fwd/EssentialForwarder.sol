@@ -22,7 +22,7 @@ import "./IDelegationRegistry.sol";
 ///      assets owned by the primary EOA.
 contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipProof {
     using ECDSA for bytes32;
-    
+
     error Unauthorized();
     error InvalidSignature();
     error InvalidOwnership();
@@ -129,11 +129,10 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
     /// @dev The RPC call and re-submission should be handled by your Relayer client
     /// @param response The unaltered bytes reponse from a call made to an RPC url from OffchainLookup::urls
     /// @param extraData The unaltered bytes from OffchainLookup::extraData
-    function executeWithProof(bytes calldata response, bytes calldata extraData)
-        external
-        payable
-        returns (bytes memory)
-    {
+    function executeWithProof(
+        bytes calldata response,
+        bytes calldata extraData
+    ) external payable returns (bytes memory) {
         (uint256 timestamp, IForwardRequest.ERC721ForwardRequest memory req, bytes memory signature) = abi.decode(
             extraData,
             (uint256, IForwardRequest.ERC721ForwardRequest, bytes)
@@ -147,11 +146,10 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
         return _executeWithProof(req);
     }
 
-    function executeWithProofNative(bytes calldata response, bytes calldata extraData)
-        external
-        payable
-        returns (bytes memory)
-    {
+    function executeWithProofNative(
+        bytes calldata response,
+        bytes calldata extraData
+    ) external payable returns (bytes memory) {
         (uint256 timestamp, IForwardRequest.ERC721ForwardRequest memory req) = abi.decode(
             extraData,
             (uint256, IForwardRequest.ERC721ForwardRequest)
@@ -161,12 +159,10 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
 
         ++_nonces[msg.sender];
 
-
-        return _executeWithProof(req);        
+        return _executeWithProof(req);
     }
 
     function _executeWithProof(IForwardRequest.ERC721ForwardRequest memory req) internal returns (bytes memory) {
-
         (bool success, bytes memory returndata) = req.to.call{gas: req.gas, value: 0}(
             // Implementation contracts may use EssentialERC2771Context::_msgNFT()
             // to access trusted NFT data. Calldata is compatible with OZ::_msgSender()
@@ -176,28 +172,22 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
         // Validate that the relayer has sent enough gas for the call.
         // See https://ronan.eth.link/blog/ethereum-gas-dangers/
         assert(gasleft() > req.gas / 63);
-        if(!success) revert InternalTransactionFailure();
-        
+        if (!success) revert InternalTransactionFailure();
+
         return returndata;
     }
-
 
     /// @notice Submit a meta-tx request where a proof of ownership is not required.
     /// @dev Useful for transactions where the signer is not using a specific NFT, but values
     /// are still required in the signature - use the zero address for nftContract and 0 for tokenId
-    function verify(IForwardRequest.ForwardRequest calldata req, bytes calldata signature)
-        public
-        view
-        returns (bool)
-    {
+    function verify(IForwardRequest.ForwardRequest calldata req, bytes calldata signature) public view returns (bool) {
         return verifyUnauthenticatedRequest(req, signature);
     }
 
-    function execute(IForwardRequest.ForwardRequest calldata req, bytes calldata signature)
-        public
-        payable
-        returns (bytes memory)
-    {
+    function execute(
+        IForwardRequest.ForwardRequest calldata req,
+        bytes calldata signature
+    ) public payable returns (bytes memory) {
         if (!verifyUnauthenticatedRequest(req, signature)) revert InvalidSignature();
 
         _nonces[req.from] = req.nonce + 1;
@@ -209,16 +199,15 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
         // Validate that the relayer has sent enough gas for the call.
         // See https://ronan.eth.link/blog/ethereum-gas-dangers/
         assert(gasleft() > req.gas / 63);
-        if(!success) revert InternalTransactionFailure();
-        
+        if (!success) revert InternalTransactionFailure();
+
         return returndata;
     }
 
-    function verifyRequest(IForwardRequest.ERC721ForwardRequest memory req, bytes memory signature)
-        internal
-        view
-        returns (bool)
-    {
+    function verifyRequest(
+        IForwardRequest.ERC721ForwardRequest memory req,
+        bytes memory signature
+    ) internal view returns (bool) {
         address signer = _hashTypedDataV4(
             keccak256(
                 abi.encode(
@@ -238,11 +227,10 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
         return _nonces[req.from] == req.nonce && signer == req.from && req.targetChainId == block.chainid;
     }
 
-    function verifyUnauthenticatedRequest(IForwardRequest.ForwardRequest memory req, bytes memory signature)
-        internal
-        view
-        returns (bool)
-    {
+    function verifyUnauthenticatedRequest(
+        IForwardRequest.ForwardRequest memory req,
+        bytes memory signature
+    ) internal view returns (bool) {
         address signer = _hashTypedDataV4(
             keccak256(
                 abi.encode(
