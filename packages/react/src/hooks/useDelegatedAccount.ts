@@ -19,17 +19,18 @@ export enum DELEGATION_TYPES {
   TOKEN,
 }
 
-export type Delegation = {
+export interface Delegation {
   type_: DELEGATION_TYPES;
   vault: `0x${string}`;
-  delegate: `0x${string}`;
+  delegate?: `0x${string}`;
   contract_?: `0x${string}`;
-  tokenId?: BigNumberish;
-};
-
-type TreeNode = Delegation & {
-  id: number;
-};
+  tokenId?: BigNumber;
+}
+interface TreeNode {
+  address: `0x${string}`;
+  children: TreeNode[];
+  delegation: Delegation;
+}
 
 type DelegatedAccountResult = {
   /* 
@@ -37,6 +38,9 @@ type DelegatedAccountResult = {
     this will return the vault wallet. Useful for ENS names, NFT holdings and token balances. 
   */
   address?: `0x${string}`;
+
+  /** Array of all addresses signerAddress can potentially use assets from through recursive delegations, ignoring DelegationArgs */
+  allAddresses: `0x${string}`[];
 
   /** Array of recursive tree Delegations from signerAddress root, ignoring DelegationArgs */
   allDelegations: Delegation[];
@@ -61,6 +65,7 @@ type DelegatedAccountResult = {
       delegate: `0x${string}`;
       tokenId?: BigNumberish;
       type: DELEGATION_TYPES;
+      registryAddress: `0x${string}`;
     };
     transactionArgs: {
       onError: (e: Error) => void;
@@ -69,14 +74,16 @@ type DelegatedAccountResult = {
     };
   }) => Promise<void>;
 
+  /** Returns true until delegation graph is complete. If using `allAddresses` to query blockchain state,
+   ** wait for this to be false to ensure you load all potentially owned assets.
+   **/
+  loadingDelegates: boolean;
+
   /** Convenience function for the connected address having 0 balance */
   isBurner: boolean;
 
   /** Boolean for whether connected address is delegate of a vaultAddress */
   isDelegated: boolean;
-
-  /** Boolean for whether allAddresses is completely loaded for signerAddress */
-  loadingDelegates: boolean;
 
   /** Connected address used for transaction signing.  */
   signerAddress?: `0x${string}`;
@@ -97,9 +104,6 @@ type DelegatedAccountResult = {
 
   /** Array of addresses that have directly delegated to connected address, respecting DelegationArgs */
   vaultAddresses: `0x${string}`[];
-
-  /** Array of all addresses signerAddress can potentially use assets from through recursive delegations, ignoring DelegationArgs */
-  allAddresses: `0x${string}`[];
 };
 
 interface DelegationArgs {
@@ -107,32 +111,99 @@ interface DelegationArgs {
   contract?: `0x${string}`;
   delegate?: `0x${string}`;
   tokenId?: BigNumberish;
+  registryAddress: `0x${string}`;
   type: DELEGATION_TYPES;
 }
 
 export function useDelegatedAccount(
-  { delegate, chainId, type, contract, tokenId }: DelegationArgs = {
+  {
+    delegate,
+    chainId,
+    type,
+    contract,
+    tokenId,
+    registryAddress,
+  }: DelegationArgs = {
     chainId: 1,
     type: DELEGATION_TYPES.ALL,
+    registryAddress: delegateCashAddress,
   },
 ): DelegatedAccountResult & GetAccountResult<Provider> {
   const { address: signerAddress, ...account } = useAccount();
+  const [tree, setTree] = useState<TreeNode | null>(null);
+  const [isTreeBuilt, setIsTreeBuilt] = useState(false);
+  const [allAddresses, setAllAddresses] = useState<Set<`0x${string}`>>(
+    new Set(),
+  );
+
   const [allDelegations, setAllDelegations] = useState<Delegation[]>([]);
   const [vaultAddress, setVaultAddress] = useState<`0x${string}`>();
   const [updateBlock, setUpdateBlock] = useState(0);
-  const [loadingDelegates, setLoadingDelegates] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  const buildTree = async (
+    address: `0x${string}`,
+    addressSet: Set<`0x${string}`>,
+    delegation: Delegation,
+  ): Promise<[TreeNode, Set<`0x${string}`>]> => {
+    const node: TreeNode = {
+      address,
+      children: [],
+      delegation,
+    };
+
+    const delegations = await readContract({
+      ...txConfig,
+      functionName: 'getDelegationsByDelegate',
+      args: [node.address],
+    });
+
+    if (delegations.length > 0) {
+      for (const delegation of delegations) {
+        const [childNode, updatedAddressSet] = await buildTree(
+          delegation.vault,
+          addressSet,
+          delegation,
+        );
+        addressSet.add(node.address); // Update the addressSet with the latest data
+        node.children.push(childNode);
+      }
+    } else {
+      // This is a leaf node, add its address to the Set
+      addressSet.add(node.address);
+    }
+
+    return [node, addressSet];
+  };
+
+  useEffect(() => {
+    if (signerAddress) {
+      const build = async (_signerAddress: `0x${string}`) => {
+        setIsTreeBuilt(false);
+        const [newTree, addressSet] = await buildTree(
+          _signerAddress,
+          new Set([signerAddress]),
+          {
+            type_: DELEGATION_TYPES.ALL,
+            vault: signerAddress,
+          },
+        );
+        setAllAddresses(addressSet);
+        setTree(newTree);
+        setIsTreeBuilt(true);
+      };
+      build(signerAddress);
+    }
+  }, [signerAddress]);
 
   const delegateAddress = useMemo(
     () => delegate || signerAddress,
     [delegate, signerAddress],
   );
 
-  // Delegates for current connected address
-  // Useful for instructing a user to switch to a delegated wallet
-  // with a valid delegation for the application context
   const txConfig = useMemo(
     () => ({
-      address: delegateCashAddress,
+      address: registryAddress,
       abi,
       chainId,
       enabled: account.isConnected,
@@ -141,7 +212,14 @@ export function useDelegatedAccount(
   );
 
   const createDelegation = async ({
-    delegationArgs: { chainId, contract, delegate, tokenId, type },
+    delegationArgs: {
+      chainId,
+      contract,
+      delegate,
+      tokenId,
+      type,
+      registryAddress = delegateCashAddress,
+    },
     transactionArgs: { onError, onSubmit, onValidated },
   }: {
     delegationArgs: {
@@ -149,6 +227,7 @@ export function useDelegatedAccount(
       contract?: `0x${string}`;
       delegate: `0x${string}`;
       tokenId?: BigNumberish;
+      registryAddress: `0x${string}`;
       type: DELEGATION_TYPES;
     };
     transactionArgs: {
@@ -197,7 +276,7 @@ export function useDelegatedAccount(
     const config = await prepareWriteContract({
       abi,
       chainId,
-      address: delegateCashAddress,
+      address: registryAddress,
       functionName: typedConfig.functionName as any,
       args: typedConfig.args as any,
     });
@@ -238,32 +317,6 @@ export function useDelegatedAccount(
     };
   }, [delegateAddress, contract, tokenId, txConfig, type]);
 
-  const fetchTreeDelegations = async (nodeDelegation: Delegation) => {
-    const metaDelegations = await readContract({
-      ...txConfig,
-      functionName: 'getDelegationsByDelegate',
-      args: [nodeDelegation.vault],
-    });
-
-    setAllDelegations((curr) => [
-      ...(curr ? curr : []),
-      ...metaDelegations.map((branchDelegation) => ({
-        ...branchDelegation,
-      })),
-    ]);
-
-    if (metaDelegations?.length > 0) {
-      metaDelegations?.forEach((branchDelegation) => {
-        if (branchDelegation.delegate === branchDelegation.vault) return;
-        return fetchTreeDelegations({
-          ...branchDelegation,
-        });
-      });
-    } else {
-      setLoadingDelegates(false);
-    }
-  };
-
   // Delegates for current connected address
   // Useful for showing user the hot wallets they can switch to while
   // maintaining full user context
@@ -279,152 +332,136 @@ export function useDelegatedAccount(
   // Useful for showing user identity context when connected to a hot wallet
   // i.e. display a user's ENS name and avatar for a vault when connected
   // to a delegated wallet
-  const { data: directDelegations } = useContractRead({
+  const { data: directDelegations, isLoading } = useContractRead({
     ...txConfig,
     scopeKey: delegateAddress,
     functionName: 'getDelegationsByDelegate',
     args: [delegateAddress as `0x${string}`],
     enabled: Boolean(account.isConnected && delegateAddress),
-  }) as { data: Delegation[] };
-
-  useEffect(() => {
-    directDelegations?.forEach((del) => {
-      fetchTreeDelegations({
-        ...del,
-        vault: del.delegate,
-      });
-    });
-  }, [directDelegations]);
-
-  const validDelegations = useMemo(() => {
-    if (type === DELEGATION_TYPES.ALL) return directDelegations;
-    return directDelegations.reduce((vd: any[], delegation) => {
-      if (type === DELEGATION_TYPES.TOKEN && tokenId !== delegation.tokenId)
-        return vd;
-
-      if (contract !== delegation.contract_) return vd;
-
-      return [delegation, ...vd];
-    }, []);
-  }, [type, contract, tokenId, directDelegations]);
-
-  const isDelegated = useMemo(
-    () =>
-      Boolean(
-        validDelegations?.find(
-          (delegation) => delegation.delegate === delegateAddress,
-        ),
-      ),
-    [delegateAddress, validDelegations],
-  );
+  }) as { data: Delegation[]; isLoading: boolean };
 
   const { data: connectedBalance } = useBalance({
     address: signerAddress,
     chainId,
   });
 
-  const vaultAddresses = useMemo(
-    () => validDelegations?.map((delegation) => delegation.vault) || [],
-    [validDelegations],
-  );
-
-  const allAddresses = useMemo(
-    () => [
-      ...new Set([
-        signerAddress,
-        ...(allDelegations?.map((delegation) => delegation.vault) || []),
-      ]),
-    ],
-    [allDelegations],
-  );
+  // const vaultAddresses = useMemo(
+  //   () => validDelegations?.map((delegation) => delegation.vault) || [],
+  //   [validDelegations],
+  // );
 
   const isBurner = useMemo(() => {
     return connectedBalance?.decimals === 0;
   }, [connectedBalance]);
 
-  useEffect(() => {
-    setVaultAddress(vaultAddresses?.[0]);
-  }, [vaultAddresses]);
+  // useEffect(() => {
+  //   setVaultAddress(vaultAddresses?.[0]);
+  // }, [vaultAddresses]);
 
-  const delegationGraph = useMemo(() => {
-    if (!signerAddress) return;
-    const tree = new Tree();
-    const root = tree.parse({
-      id: 0,
-      vault: signerAddress,
-      delegate: signerAddress,
-      type_: DELEGATION_TYPES.ALL,
-      children: [],
-    });
+  const findAddressesByDelegationType = useCallback(
+    (
+      type_: DELEGATION_TYPES,
+      contractAddress?: `0x${string}`,
+      tokenId?: BigNumberish,
+    ): `0x${string}`[] => {
+      if (!tree) return [];
 
-    allDelegations?.forEach((del, index) => {
-      const parent = root.first((node) => del.delegate === node?.model?.vault);
-      parent?.addChild({
-        id: index + 1,
-        delegate: del.delegate,
-        vault_: del.vault,
-        type_: del.type_,
-        contract_: del.contract_,
-        tokenId: del.tokenId,
-        children: [],
-      } as any);
-    });
+      const addresses: `0x${string}`[] = [];
 
-    return { tree, root };
-  }, [allDelegations, signerAddress]);
+      const dfs = (node: TreeNode) => {
+        // Check if the delegation node is valid based on the given type
+        const {
+          type_: nodeType,
+          contract_: nodeContract,
+          tokenId: nodeTokenId,
+        } = node.delegation;
+
+        const isValid =
+          type_ === DELEGATION_TYPES.ALL ||
+          (type_ === DELEGATION_TYPES.CONTRACT &&
+            nodeType === type_ &&
+            nodeContract === contractAddress) ||
+          (type_ === DELEGATION_TYPES.TOKEN &&
+            nodeType === type_ &&
+            nodeContract === contractAddress &&
+            nodeTokenId?.eq(tokenId!));
+
+        // If the delegation node is valid, add the node's address to the addresses array and continue searching the children
+        if (isValid) {
+          addresses.push(node.address);
+          for (const child of node.children) {
+            dfs(child);
+          }
+        }
+      };
+
+      // Start the search from the root node
+      dfs(tree);
+
+      return addresses;
+    },
+    [tree],
+  );
 
   const tokenDelegated = useCallback(
     ({
-      chainId,
       tokenId,
       contractAddress,
       owner,
     }: {
-      chainId?: number;
-      contractAddress?: `0x${string}`;
-      tokenId?: BigNumberish;
+      contractAddress: `0x${string}`;
+      tokenId: BigNumberish;
       owner: `0x${string}`;
-    }) => {
-      const root = delegationGraph?.root;
-      let valid = true;
-      const leaf = root?.first((node: Delegation | TreeNode | any) => {
-        const { vault } = node as TreeNode;
-        return owner === vault;
-      });
+    }): boolean => {
+      if (!tree) return false;
 
-      leaf?.walk((node: TreeNode | any) => {
-        if (node.type_ === DELEGATION_TYPES.TOKEN && tokenId !== node.tokenId) {
-          return false;
+      const dfs = (node: TreeNode): boolean => {
+        const { type_, contract_, tokenId: nodeTokenId } = node.delegation;
+
+        const isValid =
+          type_ === DELEGATION_TYPES.ALL ||
+          (type_ === DELEGATION_TYPES.CONTRACT &&
+            contract_ === contractAddress) ||
+          (type_ === DELEGATION_TYPES.TOKEN &&
+            contract_ === contractAddress &&
+            nodeTokenId?.eq(tokenId));
+
+        // If the delegation node is valid, continue searching the children
+        if (isValid) {
+          if (node.address.toLowerCase() === owner.toLowerCase()) {
+            return true;
+          }
+
+          for (const child of node.children) {
+            console.log({ child });
+            if (dfs(child)) {
+              return true;
+            }
+          }
         }
-        if (
-          node.type_ === DELEGATION_TYPES.CONTRACT &&
-          contractAddress !== node.contract_
-        ) {
-          return false;
-        }
 
-        if (node.isRoot()) {
-          valid = true;
-        }
+        return false;
+      };
 
-        return true;
-      });
-
-      return Boolean(valid);
+      // Start the search from the root node
+      return dfs(tree);
     },
-    [delegationGraph],
+    [tree, isTreeBuilt],
   );
 
+  const vaultAddresses = useMemo(() => {
+    return [...allAddresses].slice(1);
+  }, [allAddresses]);
+
   return {
-    allAddresses,
+    allAddresses: [...allAddresses],
     allDelegations,
     createDelegation,
-    delegations: validDelegations,
+    delegations: [],
     connectedBalance,
     delegatedAddresses: delegatedAddresses as `0x${string}`[],
     isBurner,
-    isDelegated,
-    loadingDelegates,
+    isDelegated: true,
     signerAddress,
     setVaultAddress,
     vaultAddress,
@@ -432,5 +469,6 @@ export function useDelegatedAccount(
     tokenDelegated,
     ...(account as GetAccountResult),
     address: vaultAddress || signerAddress,
+    loadingDelegates: !Boolean(isTreeBuilt),
   } as DelegatedAccountResult & GetAccountResult<Provider>;
 }

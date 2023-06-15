@@ -1,18 +1,20 @@
-import React, { createContext, ReactNode } from 'react';
+import React, { createContext, ReactNode, useCallback, useMemo } from 'react';
 
 import {
   address as forwarderAddress,
   domainName,
 } from '../abis/GlobalEntryForwarder.js';
 import EssentialWalletContextProvider from './EssentialWalletContext.js';
+import { providers } from 'ethers';
 
 type EssentialReactConfig = {
   forwarderAddress?: string;
   domainName?: string;
   relayerUri: string;
-  rpcUrl: string;
+  readProvider: ({ chainId }: { chainId: number }) => providers.Provider;
   burnerApiUrl?: string;
   burnerApiKey?: string;
+  gaslessApiKey?: string;
 };
 
 const defaultValue = {
@@ -34,16 +36,19 @@ const EssentialProvider = ({
 }): JSX.Element => {
   const { burnerApiKey, burnerApiUrl } = { ...defaultValue, ...config };
 
-  const _children = (__children: ReactNode) => {
-    if (burnerApiKey)
-      return React.createElement(
-        EssentialWalletContextProvider,
-        { apiKey: burnerApiKey, baseUrl: burnerApiUrl },
-        __children,
-      );
+  const _children = useCallback(
+    (__children: ReactNode) => {
+      if (burnerApiKey)
+        return React.createElement(
+          EssentialWalletContextProvider,
+          { apiKey: burnerApiKey, baseUrl: burnerApiUrl },
+          __children,
+        );
 
-    return __children;
-  };
+      return __children;
+    },
+    [burnerApiKey, burnerApiUrl],
+  );
 
   return React.createElement(
     EssentialContext.Provider,

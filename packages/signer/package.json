@@ -1,15 +1,15 @@
 {
   "name": "@xessential/signer",
-  "version": "0.0.1-beta.6",
+  "version": "0.0.1-beta.10",
   "description": "",
   "main": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "type": "module",
   "scripts": {
-  "build": "yarn tsc --project tsconfig.esm.json & yarn tsc --project tsconfig.cjs.json",
-  "test": "echo \"Error: no test specified\" && exit 0",
-  "lint": "yarn eslint .",
-  "lint:fix": "yarn eslint src/ --fix"
+    "build": "yarn tsc --project tsconfig.esm.json & yarn tsc --project tsconfig.cjs.json",
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "lint": "yarn eslint .",
+    "lint:fix": "yarn eslint src/ --fix"
   },
   "exports": {
     "import": "./dist/esm/index.js",
@@ -25,6 +25,8 @@
   "license": "MIT",
   "dependencies": {
     "@ethersproject/abstract-provider": "^5.7.0",
+    "@gelatonetwork/gasless-onboarding": "^0.0.2",
+    "@gelatonetwork/gasless-wallet": "^0.0.2",
     "@metamask/eth-sig-util": "^4.0.1",
     "ethers": "^5.7.1"
   },
@@ -40,4 +42,3 @@
     "typescript": "^4.5.4"
   }
 }
-

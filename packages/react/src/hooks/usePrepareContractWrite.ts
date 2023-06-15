@@ -24,6 +24,7 @@ export type EssentialContractWriteConfig<> = UsePrepareContractWriteConfig<
   Signer
 > &
   PrepareWriteContractConfig & {
+    chainId: number;
     onSubmit?: () => void;
     onSuccess?: (data: SendTransactionResult) => void;
     txMode?: 'meta' | 'std';
@@ -60,7 +61,7 @@ export function usePrepareContractWrite({
   const { data: signer } = useSigner();
   const [request, setRequest] = React.useState<any>();
 
-  const { relayerUri, rpcUrl, forwarderAddress, domainName } =
+  const { relayerUri, forwarderAddress, domainName, readProvider } =
     React.useContext(EssentialContext);
 
   const { wallet } = React.useContext(EssentialWalletContext);
@@ -73,7 +74,7 @@ export function usePrepareContractWrite({
     if (txMode === 'meta' && wallet && walletAddress) {
       const _wallet = new Wallet(
         wallet.getPrivateKey(),
-        new providers.JsonRpcProvider(rpcUrl),
+        readProvider({ chainId }),
       );
       signerArgs = [walletAddress, _wallet as unknown as Wallet];
     }
@@ -83,7 +84,7 @@ export function usePrepareContractWrite({
       forwarderAddress,
       relayerUri,
       chainId,
-      rpcUrl,
+      readProvider,
       onSubmit,
     });
   }, [signer, signerAddress, onSubmit, walletAddress]);

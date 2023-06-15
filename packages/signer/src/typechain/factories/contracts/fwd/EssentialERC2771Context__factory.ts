@@ -5,9 +5,9 @@
 import { Contract, Signer, utils } from "ethers";
 import type { Provider } from "@ethersproject/providers";
 import type {
-  EssentialERC2771Context,
-  EssentialERC2771ContextInterface,
-} from "../../../contracts/fwd/EssentialERC2771Context";
+  EssentialContext,
+  EssentialContextInterface,
+} from "../../../contracts/fwd/EssentialContext";
 
 const _abi = [
   {
@@ -57,19 +57,19 @@ const _abi = [
   },
 ];
 
-export class EssentialERC2771Context__factory {
+export class EssentialContext__factory {
   static readonly abi = _abi;
-  static createInterface(): EssentialERC2771ContextInterface {
-    return new utils.Interface(_abi) as EssentialERC2771ContextInterface;
+  static createInterface(): EssentialContextInterface {
+    return new utils.Interface(_abi) as EssentialContextInterface;
   }
   static connect(
     address: string,
     signerOrProvider: Signer | Provider
-  ): EssentialERC2771Context {
+  ): EssentialContext {
     return new Contract(
       address,
       _abi,
       signerOrProvider
-    ) as EssentialERC2771Context;
+    ) as EssentialContext;
   }
 }

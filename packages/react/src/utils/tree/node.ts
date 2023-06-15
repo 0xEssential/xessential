@@ -201,7 +201,7 @@ class Node<T> {
 
   walk(
     fn: NodeVisitorFunction<T>,
-    options: Options = { strategy: 'pre' }
+    options: Options = { strategy: 'pre' },
   ): void {
     switch (options.strategy) {
       case 'pre':

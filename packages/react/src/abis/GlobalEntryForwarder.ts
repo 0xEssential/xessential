@@ -1,4 +1,4 @@
-const address = '0x0000000000b6ba05994cf7ef99990d5b727a5efe' as `0x${string}`;
+const address = '0x000000000066b3aED7Ae8263588dA67fF381FfCa' as `0x${string}`;
 const domainName = 'EssentialForwarder';
 
 const abi = [
