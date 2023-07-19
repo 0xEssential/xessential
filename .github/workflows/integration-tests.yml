@@ -32,6 +32,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
       
+      - name: Building signer
+        working-directory: ./packages/signer      
+        run: yarn build
+      
       - name: Installing dependencies
         working-directory: ./packages/contracts
         run: yarn install --frozen-lockfile
