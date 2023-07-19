@@ -34,7 +34,7 @@ jobs:
       
       - name: Building signer
         working-directory: ./packages/signer      
-        run: yarn build
+        run:  yarn install --frozen-lockfile && yarn build
       
       - name: Installing dependencies
         working-directory: ./packages/contracts
