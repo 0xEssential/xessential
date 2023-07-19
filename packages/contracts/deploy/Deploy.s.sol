@@ -32,8 +32,9 @@ contract Deploy is Script {
         // deployChain("arbitrum-mainnet");
         // deployChain("arbitrum-nova");
         // deployChain("polygon-mainnet");
-        // deployChain("avalanche-mainnet");
+        deployChain("avalanche-mainnet");
         deployChain("optimism-mainnet");
+        // deployChain("zora");
         // deployChain("mainnet");
     }
 

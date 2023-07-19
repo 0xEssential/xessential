@@ -25,10 +25,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IAccessControl__factory>;
     getContractFactory(
-      name: "ERC2771Context",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC2771Context__factory>;
-    getContractFactory(
       name: "ERC165",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC165__factory>;
@@ -36,10 +32,6 @@ declare module "hardhat/types/runtime" {
       name: "IERC165",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC165__factory>;
-    getContractFactory(
-      name: "DelegationRegistry2771",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.DelegationRegistry2771__factory>;
     getContractFactory(
       name: "EssentialEIP712",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -93,11 +85,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IAccessControl>;
     getContractAt(
-      name: "ERC2771Context",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC2771Context>;
-    getContractAt(
       name: "ERC165",
       address: string,
       signer?: ethers.Signer
@@ -107,11 +94,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC165>;
-    getContractAt(
-      name: "DelegationRegistry2771",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.DelegationRegistry2771>;
     getContractAt(
       name: "EssentialEIP712",
       address: string,

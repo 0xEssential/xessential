@@ -21,7 +21,6 @@
     "gas-report": "env ENABLE_GAS_REPORT=true yarn run test"
   },
   "devDependencies": {
-    "@xessential/signer": "^0.0.1-beta.1",
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",
     "@nomiclabs/hardhat-ethers": "^2.0.5",
     "@nomiclabs/hardhat-etherscan": "^3.0.3",
@@ -33,6 +32,7 @@
     "@types/node": "^12.20.50",
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",
+    "@xessential/signer": "^0.0.1-beta.1",
     "chai": "^4.3.6",
     "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
@@ -64,8 +64,8 @@
   "dependencies": {
     "@ethersproject/abstract-provider": "^5.7.0",
     "@metamask/eth-sig-util": "^5.0.0",
-    "@openzeppelin/contracts": "^4.6.0",
-    "@openzeppelin/contracts-upgradeable": "^4.6.0",
+    "@openzeppelin/contracts": "4.8.2",
+    "@openzeppelin/contracts-upgradeable": "4.8.2",
     "@typescript-eslint/eslint-plugin": "^5.38.0"
   },
   "files": [

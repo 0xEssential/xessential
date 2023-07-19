@@ -26,6 +26,8 @@ optimism-goerli      = "${OPT_GOERLI_RPC_URL}"
 
 base-goerli          = "${BASE_GOERLI_RPC_URL}"
 
+zora                 = "${ZORA_RPC_URL}"
+
 [etherscan]
 goerli           = { key = "${ETHERSCAN_API_KEY}" }
 mainnet          = { key = "${ETHERSCAN_API_KEY}" }

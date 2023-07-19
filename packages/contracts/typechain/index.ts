@@ -12,14 +12,10 @@ export type { AccessControl } from "./@openzeppelin/contracts/access/AccessContr
 export { AccessControl__factory } from "./factories/@openzeppelin/contracts/access/AccessControl__factory";
 export type { IAccessControl } from "./@openzeppelin/contracts/access/IAccessControl";
 export { IAccessControl__factory } from "./factories/@openzeppelin/contracts/access/IAccessControl__factory";
-export type { ERC2771Context } from "./@openzeppelin/contracts/metatx/ERC2771Context";
-export { ERC2771Context__factory } from "./factories/@openzeppelin/contracts/metatx/ERC2771Context__factory";
 export type { ERC165 } from "./@openzeppelin/contracts/utils/introspection/ERC165";
 export { ERC165__factory } from "./factories/@openzeppelin/contracts/utils/introspection/ERC165__factory";
 export type { IERC165 } from "./@openzeppelin/contracts/utils/introspection/IERC165";
 export { IERC165__factory } from "./factories/@openzeppelin/contracts/utils/introspection/IERC165__factory";
-export type { DelegationRegistry2771 } from "./contracts/fwd/DelegationRegistry2771";
-export { DelegationRegistry2771__factory } from "./factories/contracts/fwd/DelegationRegistry2771__factory";
 export type { EssentialEIP712 } from "./contracts/fwd/EssentialEIP712Base.sol/EssentialEIP712";
 export { EssentialEIP712__factory } from "./factories/contracts/fwd/EssentialEIP712Base.sol/EssentialEIP712__factory";
 export type { EssentialERC2771Context } from "./contracts/fwd/EssentialERC2771Context";

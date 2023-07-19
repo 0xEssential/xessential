@@ -3,7 +3,6 @@
 /* eslint-disable */
 import type * as essentialEip712BaseSol from "./EssentialEIP712Base.sol";
 export type { essentialEip712BaseSol };
-export type { DelegationRegistry2771 } from "./DelegationRegistry2771";
 export type { EssentialERC2771Context } from "./EssentialERC2771Context";
 export type { EssentialERC2771ContextUpgradeable } from "./EssentialERC2771ContextUpgradeable";
 export type { EssentialForwarder } from "./EssentialForwarder";
