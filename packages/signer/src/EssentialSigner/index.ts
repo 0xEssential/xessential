@@ -3,6 +3,8 @@ import {
   TransactionRequest,
   TransactionResponse,
 } from '@ethersproject/abstract-provider';
+import { GaslessWallet } from '@gelatonetwork/gasless-wallet';
+
 import { ExternallyOwnedAccount } from '@ethersproject/abstract-signer';
 import { Deferrable, defineReadOnly } from '@ethersproject/properties';
 import {
@@ -10,7 +12,6 @@ import {
   BigNumberish,
   Bytes,
   Contract,
-  getDefaultProvider,
   logger,
   providers,
   Signer,
@@ -45,9 +46,9 @@ export interface EssentialOverrides {
 
 export interface EssentialSignerConfig {
   relayerUri?: string;
-  chainId?: number;
+  chainId: number;
   domainName?: string;
-  rpcUrl?: string;
+  readProvider: ({ chainId }: { chainId: number }) => providers.Provider;
   forwarderAddress?: string;
   onSubmit?: () => void;
 }
@@ -55,19 +56,18 @@ export interface EssentialSignerConfig {
 export class EssentialSigner extends Signer implements ExternallyOwnedAccount {
   readonly address: string;
   readonly chainId: number;
-  readonly connectedSigner: Signer;
+  readonly connectedSigner: Signer | GaslessWallet;
   readonly domainName: string;
   readonly forwarder: EssentialForwarder;
   readonly privateKey: string;
   readonly relayerUri: string;
-  readonly rpcUrl?: string;
-
+  readonly readProvider: providers.Provider;
   onSubmit: () => void;
 
   constructor(
     address: string,
-    signerOrProvider: Signer | Wallet,
-    config?: EssentialSignerConfig,
+    signerOrProvider: Signer | Wallet | GaslessWallet,
+    config: EssentialSignerConfig,
   ) {
     logger.checkNew(new.target, EssentialSigner);
     super();
@@ -77,15 +77,11 @@ export class EssentialSigner extends Signer implements ExternallyOwnedAccount {
       domainName,
       forwarderAddress,
       relayerUri,
-      rpcUrl,
+      readProvider,
       onSubmit,
     } = {
       ...{
         domainName: 'Essential Forwarder',
-        relayerUri: process.env.NFIGHT_RELAYER_URI,
-        chainId: process.env.NFIGHT_CHAIN_ID
-          ? parseInt(process.env.NFIGHT_CHAIN_ID, 10)
-          : 137,
       },
       ...config,
     };
@@ -109,7 +105,7 @@ export class EssentialSigner extends Signer implements ExternallyOwnedAccount {
     defineReadOnly(this, 'address', address);
     defineReadOnly(this, 'chainId', chainId);
     defineReadOnly(this, 'domainName', domainName);
-    defineReadOnly(this, 'rpcUrl', rpcUrl);
+    defineReadOnly(this, 'readProvider', readProvider({ chainId }));
 
     const _forwarder = this._buildNetworkForwarder(forwarderAddress);
 
@@ -118,6 +114,12 @@ export class EssentialSigner extends Signer implements ExternallyOwnedAccount {
 
     if (signerOrProvider instanceof Wallet) {
       defineReadOnly(this, 'privateKey', signerOrProvider.privateKey);
+    } else if (signerOrProvider instanceof GaslessWallet) {
+      defineReadOnly(
+        this,
+        'connectedSigner',
+        signerOrProvider as GaslessWallet,
+      );
     } else {
       defineReadOnly(this, 'provider', (signerOrProvider as Signer).provider);
       defineReadOnly(this, 'connectedSigner', signerOrProvider as Signer);
@@ -182,34 +184,30 @@ export class EssentialSigner extends Signer implements ExternallyOwnedAccount {
 
   // Populates all fields in a transaction, signs it and sends it to the network
   async sendTransaction(
-    transaction: TransactionRequest & { customData: EssentialOverrides },
+    transaction: TransactionRequest & EssentialOverrides,
   ): Promise<TransactionResponse | any> {
-    const _signer = this.privateKey || this.provider;
-    if (!_signer) return;
-
-    if (transaction.customData?.proof) {
-      return this.connectedSigner.sendTransaction({
-        to: this.forwarder.address,
-        data: transaction.customData?.proof,
-        gasLimit: 1e6,
-      });
+    if (transaction?.proof) {
+      return this.connectedSigner instanceof Signer
+        ? this.connectedSigner.sendTransaction({
+            to: this.forwarder.address,
+            data: transaction.proof,
+          })
+        : this.connectedSigner.sponsorTransaction(
+            this.forwarder.address,
+            transaction.proof,
+          );
     }
 
+    const _signer = this.privateKey || this.provider;
+
+    if (!_signer) return;
     const result = await signMetaTxRequest(
       _signer,
-      {
-        to: transaction.to,
-        from: transaction.from,
-        ...transaction.customData,
-        targetChainId: this.chainId,
-        data: transaction.data,
-        nonce: transaction.nonce,
-      } as ForwardRequestInput,
+      transaction as ForwardRequestInput,
       this.forwarder,
       this.domainName,
     );
 
-    // SUBMITTING META TX EVENT
     this.onSubmit && this.onSubmit();
 
     const txResult = await fetch(this.relayerUri, {
@@ -223,7 +221,13 @@ export class EssentialSigner extends Signer implements ExternallyOwnedAccount {
       }),
       headers: { 'Content-Type': 'application/json' },
     })
-      .then((resp) => resp.json())
+      .then((resp) => {
+        if (resp.status === 500) {
+          throw new Error('Relayer API Error');
+        } else {
+          return resp.json();
+        }
+      })
       .then(({ result, status }) => {
         if (status === 'success') {
           return JSON.parse(result);
@@ -270,9 +274,7 @@ export class EssentialSigner extends Signer implements ExternallyOwnedAccount {
     return new Contract(
       address || EssentialForwarderDeployments[this.chainId].address,
       forwarderAbi,
-      this.rpcUrl
-        ? new providers.JsonRpcProvider(this.rpcUrl, this.chainId)
-        : getDefaultProvider(this.chainId),
+      this.readProvider,
     ) as EssentialForwarder;
   }
 

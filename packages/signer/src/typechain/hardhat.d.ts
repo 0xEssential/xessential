@@ -45,13 +45,13 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.EssentialEIP712__factory>;
     getContractFactory(
-      name: "EssentialERC2771Context",
+      name: "EssentialContext",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.EssentialERC2771Context__factory>;
+    ): Promise<Contracts.EssentialContext__factory>;
     getContractFactory(
-      name: "EssentialERC2771ContextUpgradeable",
+      name: "EssentialContextUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.EssentialERC2771ContextUpgradeable__factory>;
+    ): Promise<Contracts.EssentialContextUpgradeable__factory>;
     getContractFactory(
       name: "EssentialForwarder",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -118,15 +118,15 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.EssentialEIP712>;
     getContractAt(
-      name: "EssentialERC2771Context",
+      name: "EssentialContext",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.EssentialERC2771Context>;
+    ): Promise<Contracts.EssentialContext>;
     getContractAt(
-      name: "EssentialERC2771ContextUpgradeable",
+      name: "EssentialContextUpgradeable",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.EssentialERC2771ContextUpgradeable>;
+    ): Promise<Contracts.EssentialContextUpgradeable>;
     getContractAt(
       name: "EssentialForwarder",
       address: string,

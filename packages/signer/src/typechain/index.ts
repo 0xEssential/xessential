@@ -22,10 +22,10 @@ export type { DelegationRegistry2771 } from "./contracts/fwd/DelegationRegistry2
 export { DelegationRegistry2771__factory } from "./factories/contracts/fwd/DelegationRegistry2771__factory";
 export type { EssentialEIP712 } from "./contracts/fwd/EssentialEIP712Base.sol/EssentialEIP712";
 export { EssentialEIP712__factory } from "./factories/contracts/fwd/EssentialEIP712Base.sol/EssentialEIP712__factory";
-export type { EssentialERC2771Context } from "./contracts/fwd/EssentialERC2771Context";
-export { EssentialERC2771Context__factory } from "./factories/contracts/fwd/EssentialERC2771Context__factory";
-export type { EssentialERC2771ContextUpgradeable } from "./contracts/fwd/EssentialERC2771ContextUpgradeable";
-export { EssentialERC2771ContextUpgradeable__factory } from "./factories/contracts/fwd/EssentialERC2771ContextUpgradeable__factory";
+export type { EssentialContext } from "./contracts/fwd/EssentialContext";
+export { EssentialContext__factory } from "./factories/contracts/fwd/EssentialContext__factory";
+export type { EssentialContextUpgradeable } from "./contracts/fwd/EssentialContextUpgradeable";
+export { EssentialContextUpgradeable__factory } from "./factories/contracts/fwd/EssentialContextUpgradeable__factory";
 export type { EssentialForwarder } from "./contracts/fwd/EssentialForwarder";
 export { EssentialForwarder__factory } from "./factories/contracts/fwd/EssentialForwarder__factory";
 export type { EssentialPlaySession } from "./contracts/fwd/EssentialPlaySession";

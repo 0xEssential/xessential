@@ -1,21 +1,22 @@
 {
   "name": "@xessential/signer",
-  "version": "0.0.1-beta.1",
+  "version": "0.0.1-beta.10",
   "description": "",
-  "main": "./dist/esm/index.js",
+  "main": "./dist/cjs/index.js",
   "types": "./dist/types/index.d.ts",
-  "type": "module",
   "scripts": {
-  "build": "yarn tsc --project tsconfig.esm.json",
-  "test": "echo \"Error: no test specified\" && exit 0",
-  "lint": "yarn eslint .",
-  "lint:fix": "yarn eslint src/ --fix"
+    "build": "yarn tsc --project tsconfig.esm.json & yarn tsc --project tsconfig.cjs.json",
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "lint": "yarn eslint .",
+    "lint:fix": "yarn eslint src/ --fix"
   },
   "exports": {
     "import": "./dist/esm/index.js",
-    "default": "./dist/esm/index.js"
+    "require": "./dist/cjs/index.js",
+    "default": "./dist/cjs/index.js"
   },
   "files": [
+    "package.json",
     "dist",
     "!**/*.spec.*",
     "README.md"
@@ -23,11 +24,13 @@
   "author": "sbauch",
   "license": "MIT",
   "dependencies": {
+    "@ethersproject/abstract-provider": "^5.7.0",
+    "@gelatonetwork/gasless-onboarding": "^0.0.2",
+    "@gelatonetwork/gasless-wallet": "^0.0.2",
     "@metamask/eth-sig-util": "^4.0.1",
     "ethers": "^5.7.1"
   },
   "devDependencies": {
-    "@ethersproject/abstract-provider": "^5.7.0",
     "@types/node": "^18.11.18",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
@@ -39,4 +42,3 @@
     "typescript": "^4.5.4"
   }
 }
-

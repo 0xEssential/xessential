@@ -28,12 +28,13 @@ export async function getNonce(
   return nonce;
 }
 
-
 async function attachNonce(
   forwarder: Contract,
   input: Record<string, any>,
 ): Promise<IForwardRequest.ERC721ForwardRequestStruct> {
-  const nonce = await getNonce(forwarder, input.from).then((nonce: BigNumber) => nonce.toString());
+  const nonce = await getNonce(forwarder, input.from).then((nonce: BigNumber) =>
+    nonce.toString(),
+  );
 
   return {
     value: BigNumber.from(0),
@@ -56,10 +57,9 @@ export async function prepareRequest(
 ): Promise<{
   request: IForwardRequest.ERC721ForwardRequestStruct;
 }> {
-
   const request = await attachNonce(forwarder, input);
 
   return {
-    request
+    request,
   };
 }

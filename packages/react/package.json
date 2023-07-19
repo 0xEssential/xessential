@@ -1,15 +1,16 @@
 {
   "name": "@xessential/react",
-  "version": "0.0.1-beta.1",
+  "version": "0.0.1-beta.91",
   "description": "",
   "main": "./dist/esm/index.js",
   "type": "module",
-  "types": "./dist/types/index.d.ts",
+  "types": "./dist/esm/index.d.ts",
   "scripts": {
     "build": "yarn tsc --project tsconfig.esm.json",
     "test": "echo \"Error: no test specified\" && exit 0",
     "lint": "yarn eslint .",
-    "lint:fix": "yarn eslint src/ --fix"
+    "lint:fix": "yarn eslint src/ --fix",
+    "link-out": "yarn build && yarn link && cd node_modules/react && yarn link && cd ../react-dom && yarn link && cd ../wagmi && yarn link"
   },
   "exports": {
     "import": "./dist/esm/index.js",
@@ -23,30 +24,35 @@
   ],
   "author": "sbauch",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "@audius/hedgehog": "^2.1.0",
+    "@xessential/signer": "^0.0.1-beta.10",
+    "axios": "^1.3.4",
+    "fxa-common-password-list": "^0.0.4"
+  },
   "devDependencies": {
-    "@xessential/signer": "^0.0.1-beta.1",
-    "@ethersproject/abstract-provider": "^5.7.0",
     "@types/node": "^18.11.18",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
-    "@wagmi/core": "^0.9.0",
+    "@wagmi/core": "^0.9.5",
+    "abitype": "^0.4.1",
     "eslint": "^8.14.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "ethers": "^5.7.2",
     "prettier": "^2.6.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "typescript": "^4.5.4",
-    "wagmi": "^0.10.x"
+    "wagmi": "^0.11.5"
   },
   "peerDependencies": {
-    "@wagmi/core": "^0.9.0",
     "ethers": ">=5.5.1",
-    "react": ">=17",
-    "react-dom": ">=17",
-    "wagmi": "^0.10.0"
+    "react": ">=16",
+    "react-dom": ">=16",
+    "wagmi": "^0.11.5"
   }
 }

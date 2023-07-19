@@ -26,7 +26,7 @@ import type {
   PromiseOrValue,
 } from "../../common";
 
-export interface EssentialERC2771ContextUpgradeableInterface
+export interface EssentialContextUpgradeableInterface
   extends utils.Interface {
   functions: {
     "isTrustedForwarder(address)": FunctionFragment;
@@ -75,12 +75,12 @@ export type InitializedEvent = TypedEvent<[number], InitializedEventObject>;
 
 export type InitializedEventFilter = TypedEventFilter<InitializedEvent>;
 
-export interface EssentialERC2771ContextUpgradeable extends BaseContract {
+export interface EssentialContextUpgradeable extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: EssentialERC2771ContextUpgradeableInterface;
+  interface: EssentialContextUpgradeableInterface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,

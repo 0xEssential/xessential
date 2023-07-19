@@ -5,9 +5,9 @@
 import { Contract, Signer, utils } from "ethers";
 import type { Provider } from "@ethersproject/providers";
 import type {
-  EssentialERC2771ContextUpgradeable,
-  EssentialERC2771ContextUpgradeableInterface,
-} from "../../../contracts/fwd/EssentialERC2771ContextUpgradeable";
+  EssentialContextUpgradeable,
+  EssentialContextUpgradeableInterface,
+} from "../../../contracts/fwd/EssentialContextUpgradeable";
 
 const _abi = [
   {
@@ -70,21 +70,21 @@ const _abi = [
   },
 ];
 
-export class EssentialERC2771ContextUpgradeable__factory {
+export class EssentialContextUpgradeable__factory {
   static readonly abi = _abi;
-  static createInterface(): EssentialERC2771ContextUpgradeableInterface {
+  static createInterface(): EssentialContextUpgradeableInterface {
     return new utils.Interface(
       _abi
-    ) as EssentialERC2771ContextUpgradeableInterface;
+    ) as EssentialContextUpgradeableInterface;
   }
   static connect(
     address: string,
     signerOrProvider: Signer | Provider
-  ): EssentialERC2771ContextUpgradeable {
+  ): EssentialContextUpgradeable {
     return new Contract(
       address,
       _abi,
       signerOrProvider
-    ) as EssentialERC2771ContextUpgradeable;
+    ) as EssentialContextUpgradeable;
   }
 }
