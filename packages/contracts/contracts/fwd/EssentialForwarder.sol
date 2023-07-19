@@ -31,12 +31,14 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    bytes32 private constant ERC721_TYPEHASH = keccak256(
-        "ForwardRequest(address to,address from,address authorizer,address nftContract,uint256 nonce,uint256 nftChainId,uint256 nftTokenId,uint256 targetChainId,bytes data)"
-    );
-    bytes32 private constant NATIVE_TYPEHASH = keccak256(
-        "MinimalRequest(address to,address from,address authorizer,uint256 nonce,uint256 targetChainId,bytes data)"
-    );
+    bytes32 private constant ERC721_TYPEHASH =
+        keccak256(
+            "ForwardRequest(address to,address from,address authorizer,address nftContract,uint256 nonce,uint256 nftChainId,uint256 nftTokenId,uint256 targetChainId,bytes data)"
+        );
+    bytes32 private constant NATIVE_TYPEHASH =
+        keccak256(
+            "MinimalRequest(address to,address from,address authorizer,uint256 nonce,uint256 targetChainId,bytes data)"
+        );
 
     mapping(address => uint256) internal _nonces;
     IDelegationRegistry public DelegationRegistry;
@@ -127,13 +129,14 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
     /// @dev The RPC call and re-submission should be handled by your Relayer client
     /// @param response The unaltered bytes reponse from a call made to an RPC url from OffchainLookup::urls
     /// @param extraData The unaltered bytes from OffchainLookup::extraData
-    function executeWithProof(bytes calldata response, bytes calldata extraData)
-        external
-        payable
-        returns (bytes memory)
-    {
-        (uint256 timestamp, IForwardRequest.ERC721ForwardRequest memory req, bytes memory signature) =
-            abi.decode(extraData, (uint256, IForwardRequest.ERC721ForwardRequest, bytes));
+    function executeWithProof(
+        bytes calldata response,
+        bytes calldata extraData
+    ) external payable returns (bytes memory) {
+        (uint256 timestamp, IForwardRequest.ERC721ForwardRequest memory req, bytes memory signature) = abi.decode(
+            extraData,
+            (uint256, IForwardRequest.ERC721ForwardRequest, bytes)
+        );
 
         if (!verifyRequest(req, signature)) revert InvalidSignature();
         if (!verifyOwnershipProof(req, response, timestamp)) revert InvalidOwnership();
@@ -143,13 +146,14 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
         return _executeWithProof(req);
     }
 
-    function executeWithProofNative(bytes calldata response, bytes calldata extraData)
-        external
-        payable
-        returns (bytes memory)
-    {
-        (uint256 timestamp, IForwardRequest.ERC721ForwardRequest memory req) =
-            abi.decode(extraData, (uint256, IForwardRequest.ERC721ForwardRequest));
+    function executeWithProofNative(
+        bytes calldata response,
+        bytes calldata extraData
+    ) external payable returns (bytes memory) {
+        (uint256 timestamp, IForwardRequest.ERC721ForwardRequest memory req) = abi.decode(
+            extraData,
+            (uint256, IForwardRequest.ERC721ForwardRequest)
+        );
 
         if (!verifyOwnershipProof(req, response, timestamp)) revert InvalidOwnership();
 
@@ -180,11 +184,10 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
         return verifyUnauthenticatedRequest(req, signature);
     }
 
-    function execute(IForwardRequest.ForwardRequest calldata req, bytes calldata signature)
-        public
-        payable
-        returns (bytes memory)
-    {
+    function execute(
+        IForwardRequest.ForwardRequest calldata req,
+        bytes calldata signature
+    ) public payable returns (bytes memory) {
         if (!verifyUnauthenticatedRequest(req, signature)) revert InvalidSignature();
 
         _nonces[req.from] = req.nonce + 1;
@@ -201,11 +204,10 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
         return returndata;
     }
 
-    function verifyRequest(IForwardRequest.ERC721ForwardRequest memory req, bytes memory signature)
-        internal
-        view
-        returns (bool)
-    {
+    function verifyRequest(
+        IForwardRequest.ERC721ForwardRequest memory req,
+        bytes memory signature
+    ) internal view returns (bool) {
         address signer = _hashTypedDataV4(
             keccak256(
                 abi.encode(
@@ -225,15 +227,20 @@ contract EssentialForwarder is EssentialEIP712, AccessControl, SignedOwnershipPr
         return _nonces[req.from] == req.nonce && signer == req.from && req.targetChainId == block.chainid;
     }
 
-    function verifyUnauthenticatedRequest(IForwardRequest.ForwardRequest memory req, bytes memory signature)
-        internal
-        view
-        returns (bool)
-    {
+    function verifyUnauthenticatedRequest(
+        IForwardRequest.ForwardRequest memory req,
+        bytes memory signature
+    ) internal view returns (bool) {
         address signer = _hashTypedDataV4(
             keccak256(
                 abi.encode(
-                    NATIVE_TYPEHASH, req.to, req.from, req.authorizer, req.nonce, req.targetChainId, keccak256(req.data)
+                    NATIVE_TYPEHASH,
+                    req.to,
+                    req.from,
+                    req.authorizer,
+                    req.nonce,
+                    req.targetChainId,
+                    keccak256(req.data)
                 )
             )
         ).recover(signature);
