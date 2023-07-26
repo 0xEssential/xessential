@@ -65,6 +65,7 @@ describe('OwnershipService', () => {
           return owner.address;
         });
     });
+
     it('should throw an error when not authorized', async () => {
       hasDelegatedOwnershipMock.mockResolvedValue(false);
 
