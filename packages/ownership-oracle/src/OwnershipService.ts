@@ -109,7 +109,7 @@ class OwnershipService {
       from,
     );
 
-    const authorized = await delegationTree.hasDelegatedOwnership(authorizer);
+    const authorized = await delegationTree.hasDelegatedOwnership(owner);
 
     if (authorized) {
       console.warn('AUTHORIZED RECURSIVELY');
