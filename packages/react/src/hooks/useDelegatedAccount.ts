@@ -4,11 +4,10 @@ import {
   readContract,
   writeContract,
 } from '@wagmi/core';
-import { FetchBalanceResult, GetAccountResult, Provider } from '@wagmi/core';
+import { FetchBalanceResult, GetAccountResult } from '@wagmi/core';
 import { BigNumber, BigNumberish } from 'ethers';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Tree from '../utils/tree/index.js';
-import { useAccount, useBalance, useContractRead } from 'wagmi';
+import { PublicClient, useAccount, useBalance, useContractRead } from 'wagmi';
 
 import { abi, address as delegateCashAddress } from '../abis/DelegateCash.js';
 
@@ -24,7 +23,7 @@ export interface Delegation {
   vault: `0x${string}`;
   delegate?: `0x${string}`;
   contract_?: `0x${string}`;
-  tokenId?: BigNumber;
+  tokenId?: BigNumberish | bigint;
 }
 interface TreeNode {
   address: `0x${string}`;
@@ -93,7 +92,7 @@ type DelegatedAccountResult = {
   tokenDelegated: (args: {
     owner: `0x${string}`;
     contractAddress: `0x${string}`;
-    tokenId?: BigNumberish;
+    tokenId?: BigNumberish | bigint;
   }) => boolean;
 
   /*
@@ -128,7 +127,7 @@ export function useDelegatedAccount(
     type: DELEGATION_TYPES.ALL,
     registryAddress: delegateCashAddress,
   },
-): DelegatedAccountResult & GetAccountResult<Provider> {
+): DelegatedAccountResult & GetAccountResult<PublicClient> {
   const { address: signerAddress, ...account } = useAccount();
   const [tree, setTree] = useState<TreeNode | null>(null);
   const [isTreeBuilt, setIsTreeBuilt] = useState(false);
@@ -284,11 +283,11 @@ export function useDelegatedAccount(
     writeContract({ ...config })
       .then((data) => {
         onSubmit(data);
-        return data.wait();
+        return data;
       })
       .then((receipt) => {
         onValidated(receipt);
-        setUpdateBlock(receipt.blockNumber);
+        // setUpdateBlock(receipt.block);
       })
       .catch((e) => {
         onError(e);
@@ -384,7 +383,7 @@ export function useDelegatedAccount(
           (type_ === DELEGATION_TYPES.TOKEN &&
             nodeType === type_ &&
             nodeContract === contractAddress &&
-            nodeTokenId?.eq(tokenId!));
+            nodeTokenId === tokenId!);
 
         // If the delegation node is valid, add the node's address to the addresses array and continue searching the children
         if (isValid) {
@@ -424,7 +423,7 @@ export function useDelegatedAccount(
             contract_ === contractAddress) ||
           (type_ === DELEGATION_TYPES.TOKEN &&
             contract_ === contractAddress &&
-            nodeTokenId?.eq(tokenId));
+            nodeTokenId === tokenId);
 
         // If the delegation node is valid, continue searching the children
         if (isValid) {
@@ -470,5 +469,5 @@ export function useDelegatedAccount(
     ...(account as GetAccountResult),
     address: vaultAddress || signerAddress,
     loadingDelegates: !Boolean(isTreeBuilt),
-  } as DelegatedAccountResult & GetAccountResult<Provider>;
+  } as DelegatedAccountResult & GetAccountResult<PublicClient>;
 }

@@ -47,6 +47,8 @@ export const handleOffchainLookup = async (
     url: urls[0],
     callData,
     forwarder: { address: forwarder.address, abi },
+  }).catch((e) => {
+    throw new Error(e);
   });
 
   return ethers.utils.hexConcat([
