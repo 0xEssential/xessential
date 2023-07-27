@@ -23,4 +23,5 @@ jobs:
             run: heroku plugins:install heroku-builds
 
           - name: deploy tarball
-            run: cd packages/ownership-oracle && heroku builds:create -a ownership-rpc
+            working-directory: ./packages/ownership-oracle      
+            run: heroku builds:create -a ownership-rpc
