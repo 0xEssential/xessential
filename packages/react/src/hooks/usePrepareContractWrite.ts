@@ -4,16 +4,16 @@ import {
   PrepareWriteContractConfig,
   PrepareWriteContractResult,
   SendTransactionResult,
-  Signer,
 } from '@wagmi/core';
 import { Abi } from 'abitype';
 import { constants, Contract, providers, utils, Wallet } from 'ethers';
 import * as React from 'react';
-import { UsePrepareContractWriteConfig, useSigner } from 'wagmi';
+import { UsePrepareContractWriteConfig, WalletClient } from 'wagmi';
 
 import { EssentialContext } from '../components/EssentialProvider.js';
 import { useDelegatedAccount } from './useDelegatedAccount.js';
 import { EssentialWalletContext } from '../components/EssentialWalletContext.js';
+import { useEthersSigner } from './useEthersSigner.js';
 
 type TAbi = Abi | readonly {}[];
 
@@ -21,7 +21,7 @@ export type EssentialContractWriteConfig<> = UsePrepareContractWriteConfig<
   TAbi,
   string,
   number,
-  Signer
+  WalletClient
 > &
   PrepareWriteContractConfig & {
     chainId: number;
@@ -29,6 +29,9 @@ export type EssentialContractWriteConfig<> = UsePrepareContractWriteConfig<
     onSuccess?: (data: SendTransactionResult) => void;
     txMode?: 'meta' | 'std';
     address: `0x${string}` | string;
+    overrides?: {
+      customData?: Record<string, any>;
+    };
   };
 
 export type EssentialPrepareWriteContractResult =
@@ -58,7 +61,7 @@ export function usePrepareContractWrite({
     signerAddress,
     vaultAddress,
   } = useDelegatedAccount();
-  const { data: signer } = useSigner();
+  const signer = useEthersSigner();
   const [request, setRequest] = React.useState<any>();
 
   const { relayerUri, forwarderAddress, domainName, readProvider } =
@@ -69,7 +72,10 @@ export function usePrepareContractWrite({
 
   const globalEntrySigner = React.useMemo(() => {
     if (!signerAddress || !signer) return;
-    let signerArgs: [string, Signer | Wallet] = [signerAddress, signer];
+    let signerArgs: [string, providers.JsonRpcSigner | Wallet] = [
+      signerAddress,
+      signer,
+    ];
 
     if (txMode === 'meta' && wallet && walletAddress) {
       const _wallet = new Wallet(
@@ -172,6 +178,6 @@ export function usePrepareContractWrite({
       onSettled,
       onSuccess,
       onSubmit,
-    } as EssentialPrepareWriteContractResult,
+    } as unknown as EssentialPrepareWriteContractResult,
   };
 }
