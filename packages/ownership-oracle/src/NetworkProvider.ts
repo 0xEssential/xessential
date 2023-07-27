@@ -7,6 +7,7 @@ export const PROVIDERS = {
   7700: 'https://canto.slingshot.finance/',
   740: 'https://eth.plexnode.wtf/',
   42170: 'https://nova.arbitrum.io/rpc',
+  7777777: 'https://rpc.zora.energy/',
 };
 
 class NetworkProvider {
@@ -22,6 +23,7 @@ class NetworkProvider {
       case 7700:
       case 740:
       case 42170:
+      case 7777777:
         provider = new providers.JsonRpcProvider(PROVIDERS[chainId], chainId);
         break;
       default:

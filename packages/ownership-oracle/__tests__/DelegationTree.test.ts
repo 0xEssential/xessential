@@ -49,6 +49,28 @@ describe('DelegationTree', () => {
       expect(authorized).toBe(false);
     });
 
+    it('returns false when signer is not owner and no authorizer', async () => {
+      getAllDelegationsMock.mockReturnValueOnce([
+        {
+          vault: owner.address,
+          tokenId,
+          contract_: nftContract,
+          delegate: signer.address,
+          type_: 1,
+        },
+      ]);
+
+      const tree = new DelegationTree(
+        provider,
+        nftContract,
+        tokenId,
+        signer.address,
+      );
+
+      const authorized = await tree.hasDelegatedOwnership('');
+      expect(authorized).toBe(false);
+    });
+
     it('returns false when authorizer is not owner', async () => {
       getAllDelegationsMock.mockReturnValueOnce([
         {
