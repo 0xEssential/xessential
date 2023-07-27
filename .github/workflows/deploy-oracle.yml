@@ -5,6 +5,8 @@ on:
     branches: 
       - main
     types: [closed]
+    paths:
+      - 'packages/ownership-oracle/src/**'
 jobs:
   deploy:
     if: ${{ github.event.pull_request.merged }}
