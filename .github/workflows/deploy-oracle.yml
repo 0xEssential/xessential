@@ -1,0 +1,26 @@
+name: Deploy Ownership Oracle
+
+on:
+  pull_request:
+    branches: 
+      - main
+    types: [closed]
+jobs:
+  deploy:
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: ubuntu-latest
+    
+    steps:          
+          - uses: akhileshns/heroku-deploy@v3.12.12
+            with:
+              heroku_api_key: ${{secrets.API_HEROKU_API_KEY}}
+              heroku_app_name: ownership-rpc
+              heroku_email: ${{secrets.API_HEROKU_EMAIL}}
+              buildpack: https://github.com/heroku/heroku-buildpack-nodejs.git
+              justlogin: true
+
+          - name: install build plugin
+            run: heroku plugins:install heroku-builds
+
+          - name: deploy tarball
+            run: cd packages/ownership-oracle && heroku builds:create -a ownership-rpc
