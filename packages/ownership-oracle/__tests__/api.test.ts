@@ -56,6 +56,7 @@ describe('durin_call endpoint', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('result', 'gud proof');
   });
+
   it('returns an error if signer is neither owner nor authorized', async () => {
     processCallMock.mockRejectedValue(new Error('bad proof'));
 
