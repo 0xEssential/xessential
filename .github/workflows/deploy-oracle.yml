@@ -11,17 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:          
-          - uses: akhileshns/heroku-deploy@v3.12.12
+          - uses: akhileshns/heroku-deploy@v3.12.14
             with:
               heroku_api_key: ${{secrets.API_HEROKU_API_KEY}}
               heroku_app_name: ownership-rpc
               heroku_email: ${{secrets.API_HEROKU_EMAIL}}
               buildpack: https://github.com/heroku/heroku-buildpack-nodejs.git
-              justlogin: true
-
-          - name: install build plugin
-            run: heroku plugins:install heroku-builds
-
-          - name: deploy tarball
-            working-directory: packages/ownership-oracle      
-            run: heroku builds:create -a ownership-rpc
+              appDir: "packages/ownership-oracle"
