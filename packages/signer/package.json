@@ -28,7 +28,7 @@
     "@gelatonetwork/gasless-onboarding": "^0.0.2",
     "@gelatonetwork/gasless-wallet": "^0.0.2",
     "@metamask/eth-sig-util": "^4.0.1",
-    "ethers": "^5.7.1"
+    "ethers": "^5.7.1"  
   },
   "devDependencies": {
     "@types/node": "^18.11.18",

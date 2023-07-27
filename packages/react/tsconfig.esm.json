@@ -1,10 +1,26 @@
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-      "target": "es6",
-      "module": "ES2020",
-      "outDir": "dist/esm",
-      "declarationDir": "dist/esm",
-      "declaration": true
+    "skipLibCheck": true,
+    "target": "es6",
+    "outDir": "dist/esm",
+    "declarationDir": "dist/esm",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "es2020",
+    "moduleResolution": "Node",
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "noUncheckedIndexedAccess": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "declaration": true,
+    "resolveJsonModule": true,
+    "maxNodeModuleJsDepth": 0  
   }
 }

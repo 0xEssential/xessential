@@ -11,11 +11,10 @@ import {
 } from '@wagmi/core';
 
 export function useContractWrite<
-  TMode extends WriteContractMode = WriteContractMode,
   TAbi extends Abi | readonly {}[] = Abi,
   TFunctionName extends string = string,
 >(
-  config: UseContractWriteConfig<TMode, TAbi, TFunctionName> & {
+  config: UseContractWriteConfig<TAbi, TFunctionName> & {
     signer: Signer;
     proof?: `0x${string}`;
     onSuccess?: (data: SendTransactionResult) => void;
@@ -25,7 +24,10 @@ export function useContractWrite<
   const [isLoading, setLoading] = React.useState(false);
 
   const { address, abi, functionName, chainId, mode, signer } = config;
-  const { request } = config as WriteContractPreparedArgs<TAbi, TFunctionName>;
+  const { request } = config as unknown as WriteContractPreparedArgs<
+    TAbi,
+    TFunctionName
+  >;
 
   const defaultValues = {
     error: false,
@@ -37,10 +39,10 @@ export function useContractWrite<
 
   const write = React.useCallback(async () => {
     if (!signer) return;
-    
+
     setLoading(true);
     signer
-      .sendTransaction(request)
+      .sendTransaction(request as any)
       .then((response) => {
         setData(response as SendTransactionResult);
         config?.onSuccess?.(response as SendTransactionResult, {} as any, null);
